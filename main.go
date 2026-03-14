@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/munizr13/bookshelf-api/internal/handlers"
+	"github.com/munizr13/bookshelf-api/internal/middleware"
 	"github.com/munizr13/bookshelf-api/internal/store"
 )
 
@@ -22,5 +23,5 @@ func main() {
 
 	addr := ":8080"
 	fmt.Printf("Bookshelf API listening on %s\n", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	log.Fatal(http.ListenAndServe(addr, middleware.Logging(mux)))
 }
