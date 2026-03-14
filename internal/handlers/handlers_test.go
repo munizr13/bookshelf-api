@@ -123,3 +123,122 @@ func TestGetBookNotFound(t *testing.T) {
 		t.Errorf("expected 404, got %d", w.Code)
 	}
 }
+
+func TestListBooksFilterByAuthor(t *testing.T) {
+	s := store.New()
+	h := New(s)
+	s.Add(models.Book{Title: "Dune", Author: "Frank Herbert", Year: 1965})
+	s.Add(models.Book{Title: "1984", Author: "George Orwell", Year: 1949})
+
+	req := httptest.NewRequest("GET", "/books?author=herbert", nil)
+	w := httptest.NewRecorder()
+	h.ListBooks(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var books []models.Book
+	json.NewDecoder(w.Body).Decode(&books)
+	if len(books) != 1 {
+		t.Fatalf("expected 1 book, got %d", len(books))
+	}
+	if books[0].Title != "Dune" {
+		t.Errorf("expected Dune, got %s", books[0].Title)
+	}
+}
+
+func TestListBooksFilterByRead(t *testing.T) {
+	s := store.New()
+	h := New(s)
+	s.Add(models.Book{Title: "Dune", Author: "Frank Herbert", Read: true})
+	s.Add(models.Book{Title: "1984", Author: "George Orwell", Read: false})
+
+	req := httptest.NewRequest("GET", "/books?read=true", nil)
+	w := httptest.NewRecorder()
+	h.ListBooks(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var books []models.Book
+	json.NewDecoder(w.Body).Decode(&books)
+	if len(books) != 1 {
+		t.Fatalf("expected 1 book, got %d", len(books))
+	}
+	if books[0].Title != "Dune" {
+		t.Errorf("expected Dune, got %s", books[0].Title)
+	}
+}
+
+func TestListBooksFilterByYear(t *testing.T) {
+	s := store.New()
+	h := New(s)
+	s.Add(models.Book{Title: "Dune", Author: "Frank Herbert", Year: 1965})
+	s.Add(models.Book{Title: "1984", Author: "George Orwell", Year: 1949})
+
+	req := httptest.NewRequest("GET", "/books?year=1949", nil)
+	w := httptest.NewRecorder()
+	h.ListBooks(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var books []models.Book
+	json.NewDecoder(w.Body).Decode(&books)
+	if len(books) != 1 {
+		t.Fatalf("expected 1 book, got %d", len(books))
+	}
+	if books[0].Title != "1984" {
+		t.Errorf("expected 1984, got %s", books[0].Title)
+	}
+}
+
+func TestListBooksInvalidRead(t *testing.T) {
+	s := store.New()
+	h := New(s)
+
+	req := httptest.NewRequest("GET", "/books?read=notabool", nil)
+	w := httptest.NewRecorder()
+	h.ListBooks(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestListBooksInvalidYear(t *testing.T) {
+	s := store.New()
+	h := New(s)
+
+	req := httptest.NewRequest("GET", "/books?year=abc", nil)
+	w := httptest.NewRecorder()
+	h.ListBooks(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestListBooksCombinedFilters(t *testing.T) {
+	s := store.New()
+	h := New(s)
+	s.Add(models.Book{Title: "Dune", Author: "Frank Herbert", Year: 1965, Read: true})
+	s.Add(models.Book{Title: "Children of Dune", Author: "Frank Herbert", Year: 1976, Read: false})
+	s.Add(models.Book{Title: "1984", Author: "George Orwell", Year: 1949, Read: true})
+
+	req := httptest.NewRequest("GET", "/books?author=herbert&read=true", nil)
+	w := httptest.NewRecorder()
+	h.ListBooks(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var books []models.Book
+	json.NewDecoder(w.Body).Decode(&books)
+	if len(books) != 1 {
+		t.Fatalf("expected 1 book, got %d", len(books))
+	}
+	if books[0].Title != "Dune" {
+		t.Errorf("expected Dune, got %s", books[0].Title)
+	}
+}

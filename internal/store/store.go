@@ -2,10 +2,18 @@ package store
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/munizr13/bookshelf-api/internal/models"
 )
+
+// SearchFilters holds optional filters for listing books.
+type SearchFilters struct {
+	Author *string
+	Read   *bool
+	Year   *int
+}
 
 type BookStore struct {
 	mu    sync.RWMutex
@@ -65,6 +73,25 @@ func (s *BookStore) Update(id string, b models.Book) (models.Book, bool) {
 	existing.Read = b.Read
 	s.books[id] = existing
 	return existing, true
+}
+
+func (s *BookStore) Search(f SearchFilters) []models.Book {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	result := make([]models.Book, 0)
+	for _, b := range s.books {
+		if f.Author != nil && !strings.Contains(strings.ToLower(b.Author), strings.ToLower(*f.Author)) {
+			continue
+		}
+		if f.Read != nil && b.Read != *f.Read {
+			continue
+		}
+		if f.Year != nil && b.Year != *f.Year {
+			continue
+		}
+		result = append(result, b)
+	}
+	return result
 }
 
 func (s *BookStore) Delete(id string) bool {

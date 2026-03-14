@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/munizr13/bookshelf-api/internal/models"
 	"github.com/munizr13/bookshelf-api/internal/store"
@@ -17,7 +18,30 @@ func New(s *store.BookStore) *Handler {
 }
 
 func (h *Handler) ListBooks(w http.ResponseWriter, r *http.Request) {
-	books := h.store.List()
+	q := r.URL.Query()
+	var filters store.SearchFilters
+
+	if v := q.Get("author"); v != "" {
+		filters.Author = &v
+	}
+	if v := q.Get("read"); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			http.Error(w, "invalid read parameter", http.StatusBadRequest)
+			return
+		}
+		filters.Read = &b
+	}
+	if v := q.Get("year"); v != "" {
+		y, err := strconv.Atoi(v)
+		if err != nil {
+			http.Error(w, "invalid year parameter", http.StatusBadRequest)
+			return
+		}
+		filters.Year = &y
+	}
+
+	books := h.store.Search(filters)
 	writeJSON(w, http.StatusOK, books)
 }
 
