@@ -46,6 +46,27 @@ func (s *BookStore) List() []models.Book {
 	return result
 }
 
+func (s *BookStore) Update(id string, b models.Book) (models.Book, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	existing, ok := s.books[id]
+	if !ok {
+		return models.Book{}, false
+	}
+	if b.Title != "" {
+		existing.Title = b.Title
+	}
+	if b.Author != "" {
+		existing.Author = b.Author
+	}
+	if b.Year != 0 {
+		existing.Year = b.Year
+	}
+	existing.Read = b.Read
+	s.books[id] = existing
+	return existing, true
+}
+
 func (s *BookStore) Delete(id string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()

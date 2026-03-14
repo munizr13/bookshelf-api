@@ -45,6 +45,21 @@ func (h *Handler) GetBook(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, book)
 }
 
+func (h *Handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var book models.Book
+	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	updated, ok := h.store.Update(id, book)
+	if !ok {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	writeJSON(w, http.StatusOK, updated)
+}
+
 func (h *Handler) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if !h.store.Delete(id) {

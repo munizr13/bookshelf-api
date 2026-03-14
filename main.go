@@ -17,6 +17,7 @@ func main() {
 	mux.HandleFunc("GET /books", h.ListBooks)
 	mux.HandleFunc("POST /books", h.AddBook)
 	mux.HandleFunc("GET /books/{id}", h.GetBook)
+	mux.HandleFunc("PUT /books/{id}", h.UpdateBook)
 	mux.HandleFunc("DELETE /books/{id}", h.DeleteBook)
 
 	addr := ":8080"

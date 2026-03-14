@@ -35,6 +35,33 @@ func TestDelete(t *testing.T) {
 	}
 }
 
+func TestUpdate(t *testing.T) {
+	s := New()
+	book := s.Add(models.Book{Title: "Dune", Author: "Frank Herbert", Year: 1965})
+
+	updated, ok := s.Update(book.ID, models.Book{Title: "Dune Messiah", Year: 1969})
+	if !ok {
+		t.Fatal("expected update to succeed")
+	}
+	if updated.Title != "Dune Messiah" {
+		t.Errorf("expected title Dune Messiah, got %s", updated.Title)
+	}
+	if updated.Author != "Frank Herbert" {
+		t.Errorf("expected author preserved, got %s", updated.Author)
+	}
+	if updated.Year != 1969 {
+		t.Errorf("expected year 1969, got %d", updated.Year)
+	}
+}
+
+func TestUpdateNotFound(t *testing.T) {
+	s := New()
+	_, ok := s.Update("nonexistent", models.Book{Title: "X"})
+	if ok {
+		t.Fatal("expected update to fail for missing book")
+	}
+}
+
 func TestList(t *testing.T) {
 	s := New()
 	s.Add(models.Book{Title: "Book A"})
